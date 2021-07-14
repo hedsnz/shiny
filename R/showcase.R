@@ -82,7 +82,7 @@ navTabsHelper <- function(files, prefix = "") {
   lapply(files, function(file) {
     with(tags,
       li(class=if (tolower(file) %in% c("app.r", "server.r")) "active" else "",
-         a(href=paste("#", gsub(".", "_", file, fixed=TRUE), "_code", sep=""),
+         a(href=paste("#", gsub("[\\./]", "_", file), "_code", sep=""),
            "data-toggle"="tab", "data-bs-toggle"="tab", paste0(prefix, file)))
     )
   })
@@ -108,8 +108,8 @@ tabContentHelper <- function(files, path, language) {
                       if (tolower(file) %in% c("app.r", "server.r")) " active"
                       else "",
                       sep=""),
-          id=paste(gsub(".", "_", file, fixed=TRUE),
-                   "_code", sep=""),
+          # replace periods and slashes with underscores
+          id=paste(gsub("[\\./]", "_", file), "_code", sep=""),
           tags$pre(class="shiny-code",
               # we need to prevent the indentation of <code> ... </code>
               HTML(format(tags$code(
@@ -122,7 +122,10 @@ tabContentHelper <- function(files, path, language) {
 # Returns tags containing the application's code in Bootstrap-style tabs in
 # showcase mode.
 showcaseCodeTabs <- function(codeLicense) {
-  rFiles <- list.files(pattern = "\\.[rR]$")
+  rFiles <- c(
+    list.files(pattern = "\\.[rR]$"),
+    setNames(unlist(sapply(c("r", "R"), function(x) list.files(x, pattern = "\\.[rR]$", full.names = TRUE))), NULL)
+  )
   wwwFiles <- list()
   if (isTRUE(.globals$IncludeWWW)) {
     path <- file.path(getwd(), "www")
